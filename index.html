@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roleta das Doenças Crônicas - Site Educativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 50%, #ef4444 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem 0;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .card-header p {
+            color: #6b7280;
+            font-size: 1.125rem;
+        }
+
+        .wheel-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .wheel {
+            position: relative;
+            transition: transform 3s cubic-bezier(0.23, 1, 0.32, 1);
+            filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.2));
+        }
+
+        .pointer {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+        }
+
+        .pointer-triangle {
+            width: 0;
+            height: 0;
+            border-left: 35px solid #8b5cf6;
+            border-top: 25px solid transparent;
+            border-bottom: 25px solid transparent;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .result-indicator {
+            position: absolute;
+            top: 50%;
+            right: -70px;
+            transform: translateY(-50%);
+            background: white;
+            border: 4px solid #8b5cf6;
+            border-radius: 50%;
+            padding: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+            display: none;
+        }
+
+        .result-indicator.show {
+            display: block;
+        }
+
+        .result-indicator-text {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 0.5rem;
+            background: #8b5cf6;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .spin-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: scale(1);
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+        }
+
+        .spin-button:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+            transform: scale(1.05);
+        }
+
+        .spin-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .result-card {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #dcfce7 0%, #dbeafe 100%);
+            border: 2px solid #16a34a;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .result-card.show {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #166534;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-message {
+            font-size: 1.125rem;
+            color: #15803d;
+            font-weight: 500;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            z-index: 50;
+            display: none;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            max-width: 48rem;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .modal-title h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        .close-button {
+            color: #6b7280;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .close-button:hover {
+            color: #374151;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .info-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .info-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .description {
+            color: #6b7280;
+            background: #f9fafb;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+        }
+
+        .symptoms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .symptom-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            background: #fef2f2;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .treatment-list, .prevention-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .treatment-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            background: #eff6ff;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .prevention-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            background: #f0fdf4;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .warning {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #fffbeb;
+            border: 1px solid #fbbf24;
+            border-radius: 0.5rem;
+        }
+
+        .warning p {
+            font-size: 0.875rem;
+            color: #92400e;
+        }
+
+        .modal-footer {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .understand-button {
+            flex: 1;
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .understand-button:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+        }
+
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .footer p {
+            font-size: 1.125rem;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.05); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-card {
+                padding: 1rem;
+            }
+            
+            .modal-content {
+                margin: 1rem;
+            }
+            
+            .symptoms-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <span>❤️</span>
+                Doenças Crônicas
+                <span>📊</span>
+            </h1>
+            <p>Roleta Educativa para Aprender sobre Prevenção e Cuidados</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="main-card">
+            <div class="card-header">
+                <h2>
+                    <span>📚</span>
+                    Roleta do Conhecimento
+                </h2>
+                <p>Gire a roleta e aprenda sobre cada condição de saúde!</p>
+            </div>
+
+            <!-- Wheel Container -->
+            <div class="wheel-container">
+                <div class="wheel" id="wheel">
+                    <svg width="380" height="380" viewBox="0 0 380 380">
+                        <!-- Círculo externo -->
+                        <circle cx="190" cy="190" r="185" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                        
+                        <!-- Segmento 1: Diabetes (0° a 120°) -->
+                        <path d="M 190,190 L 190,5 A 185,185 0 0,1 350.3,135 Z" 
+                              fill="#ff6b6b" stroke="#ffffff" stroke-width="3"/>
+                        
+                        <!-- Segmento 2: Hipertensão (120° a 240°) -->
+                        <path d="M 190,190 L 350.3,135 A 185,185 0 0,1 29.7,245 Z" 
+                              fill="#4ecdc4" stroke="#ffffff" stroke-width="3"/>
+                        
+                        <!-- Segmento 3: Obesidade (240° a 360°) -->
+                        <path d="M 190,190 L 29.7,245 A 185,185 0 0,1 190,5 Z" 
+                              fill="#45b7d1" stroke="#ffffff" stroke-width="3"/>
+
+                        <!-- Textos centralizados e rotacionados -->
+                        <!-- Diabetes (60° do centro) -->
+                        <g transform="rotate(60, 190, 190)">
+                            <text x="190" y="100" fill="white" font-size="22" font-weight="bold" 
+                                  text-anchor="middle" dominant-baseline="middle" 
+                                  style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">Diabetes</text>
+                            <text x="190" y="125" fill="white" font-size="32" 
+                                  text-anchor="middle" dominant-baseline="middle">🩸</text>
+                        </g>
+
+                        <!-- Hipertensão (180° do centro) -->
+                        <g transform="rotate(180, 190, 190)">
+                            <text x="190" y="100" fill="white" font-size="22" font-weight="bold" 
+                                  text-anchor="middle" dominant-baseline="middle" 
+                                  style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">Hipertensão</text>
+                            <text x="190" y="125" fill="white" font-size="32" 
+                                  text-anchor="middle" dominant-baseline="middle">💓</text>
+                        </g>
+
+                        <!-- Obesidade (300° do centro) -->
+                        <g transform="rotate(300, 190, 190)">
+                            <text x="190" y="100" fill="white" font-size="22" font-weight="bold" 
+                                  text-anchor="middle" dominant-baseline="middle" 
+                                  style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">Obesidade</text>
+                            <text x="190" y="125" fill="white" font-size="32" 
+                                  text-anchor="middle" dominant-baseline="middle">⚖️</text>
+                        </g>
+
+                        <!-- Centro da roleta -->
+                        <circle cx="190" cy="190" r="35" fill="#c4b5fd" stroke="#8b5cf6" stroke-width="4"/>
+                        <text x="190" y="190" text-anchor="middle" dominant-baseline="middle" 
+                              font-size="28" font-weight="bold">🎯</text>
+                    </svg>
+                </div>
+
+                <!-- Seta indicadora profissional -->
+                <div class="pointer">
+                    <div class="pointer-triangle"></div>
+                    <div class="result-indicator" id="resultIndicator">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6;">👆</div>
+                        <div class="result-indicator-text">RESULTADO!</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controles -->
+            <div style="text-align: center;">
+                <button class="spin-button" id="spinButton">
+                    🎲 Girar Roleta Educativa
+                </button>
+
+                <div class="result-card" id="resultCard">
+                    <div class="result-title" id="resultTitle">
+                        🎉 Vamos estudar: <span id="resultName"></span>
+                    </div>
+                    <div class="result-message" id="resultMessage"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>🏥 Sempre consulte um profissional de saúde para orientações médicas adequadas</p>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <span id="modalIcon" style="font-size: 1.875rem;"></span>
+                        <h2 id="modalTitle"></h2>
+                    </div>
+                    <button class="close-button" id="closeButton">×</button>
+                </div>
+
+                <div class="info-section">
+                    <h3>📋 O que é?</h3>
+                    <div class="description" id="modalDescription"></div>
+                </div>
+
+                <div class="info-section">
+                    <h3>⚠️ Principais Sintomas</h3>
+                    <div class="symptoms-grid" id="modalSymptoms"></div>
+                </div>
+
+                <div class="info-section">
+                    <h3>💊 Como Tratar</h3>
+                    <div class="treatment-list" id="modalTreatment"></div>
+                </div>
+
+                <div class="info-section">
+                    <h3>🛡️ Como Prevenir</h3>
+                    <div class="prevention-list" id="modalPrevention"></div>
+                </div>
+
+                <div class="warning">
+                    <p><strong>⚠️ Importante:</strong> Estas informações são apenas educativas. Sempre consulte um médico para diagnóstico e tratamento adequados.</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="understand-button" id="understandButton">Entendi! 📚</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const diseases = [
+            {
+                name: "Diabetes",
+                color: "#ff6b6b",
+                icon: "🩸",
+                description: "Condição em que o corpo não produz insulina suficiente ou não consegue usá-la adequadamente.",
+                symptoms: [
+                    "Sede excessiva",
+                    "Urinar frequentemente", 
+                    "Fome constante",
+                    "Perda de peso",
+                    "Visão embaçada",
+                    "Feridas que demoram para cicatrizar"
+                ],
+                treatment: [
+                    "Monitorar glicose regularmente",
+                    "Medicamentos prescritos pelo médico",
+                    "Dieta balanceada com baixo açúcar",
+                    "Exercícios físicos regulares",
+                    "Controle do peso"
+                ],
+                prevention: [
+                    "Manter peso saudável",
+                    "Exercitar-se regularmente",
+                    "Alimentação equilibrada",
+                    "Evitar açúcar em excesso",
+                    "Consultas médicas regulares"
+                ]
+            },
+            {
+                name: "Hipertensão",
+                color: "#4ecdc4",
+                icon: "💓",
+                description: "Pressão arterial elevada que força o coração a trabalhar mais para bombear sangue.",
+                symptoms: [
+                    "Dor de cabeça",
+                    "Tontura",
+                    "Visão embaçada",
+                    "Dor no peito",
+                    "Falta de ar",
+                    "Sangramento nasal"
+                ],
+                treatment: [
+                    "Medicamentos anti-hipertensivos",
+                    "Reduzir consumo de sal",
+                    "Exercícios cardiovasculares",
+                    "Controle do estresse",
+                    "Monitorar pressão regularmente"
+                ],
+                prevention: [
+                    "Dieta com pouco sal",
+                    "Exercícios regulares",
+                    "Manter peso ideal",
+                    "Não fumar",
+                    "Limitar álcool",
+                    "Gerenciar estresse"
+                ]
+            },
+            {
+                name: "Obesidade",
+                color: "#45b7d1",
+                icon: "⚖️",
+                description: "Acúmulo excessivo de gordura corporal que pode prejudicar a saúde.",
+                symptoms: [
+                    "IMC acima de 30",
+                    "Dificuldade para respirar",
+                    "Fadiga",
+                    "Dores nas articulações",
+                    "Problemas de sono",
+                    "Baixa autoestima"
+                ],
+                treatment: [
+                    "Dieta hipocalórica orientada",
+                    "Exercícios físicos regulares",
+                    "Mudanças no estilo de vida",
+                    "Acompanhamento nutricional",
+                    "Em casos graves, cirurgia bariátrica"
+                ],
+                prevention: [
+                    "Alimentação balanceada",
+                    "Exercícios regulares",
+                    "Controle de porções",
+                    "Evitar alimentos processados",
+                    "Beber bastante água",
+                    "Dormir bem"
+                ]
+            }
+        ];
+
+        let isSpinning = false;
+        let rotation = 0;
+        let sequenceCount = 0;
+
+        const wheel = document.getElementById('wheel');
+        const spinButton = document.getElementById('spinButton');
+        const resultCard = document.getElementById('resultCard');
+        const resultName = document.getElementById('resultName');
+        const resultMessage = document.getElementById('resultMessage');
+        const resultIndicator = document.getElementById('resultIndicator');
+        const modal = document.getElementById('modal');
+        const closeButton = document.getElementById('closeButton');
+        const understandButton = document.getElementById('understandButton');
+
+        const messages = {
+            "Diabetes": "Vamos aprender sobre o controle da glicose no sangue!",
+            "Hipertensão": "Vamos descobrir como cuidar da pressão arterial!",
+            "Obesidade": "Vamos explorar hábitos saudáveis para o peso ideal!"
+        };
+
+        function spinWheel() {
+            if (isSpinning) return;
+
+            isSpinning = true;
+            resultCard.classList.remove('show');
+            resultIndicator.classList.remove('show');
+            spinButton.disabled = true;
+            spinButton.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">⟳</span> Girando...';
+
+            // Sequência programada: 0=Diabetes, 1=Hipertensão, 2=Obesidade
+            const targetDiseaseIndex = sequenceCount % 3;
+            
+            // Ângulos corretos para parar no centro de cada segmento
+            const targetAngles = [60, 180, 300]; // Centro de cada segmento
+            const targetAngle = targetAngles[targetDiseaseIndex];
+
+            // Rotações completas + ângulo final
+            const minSpins = 5;
+            const maxSpins = 8;
+            const spins = Math.random() * (maxSpins - minSpins) + minSpins;
+            const totalRotation = spins * 360 + (360 - targetAngle);
+            const newRotation = rotation + totalRotation;
+
+            wheel.style.transform = `rotate(${newRotation}deg)`;
+            rotation = newRotation;
+            sequenceCount++;
+
+            // Resultado após 3 segundos
+            setTimeout(() => {
+                const selectedDisease = diseases[targetDiseaseIndex];
+                showResult(selectedDisease);
+                isSpinning = false;
+                spinButton.disabled = false;
+                spinButton.innerHTML = '🎲 Girar Roleta Educativa';
+                resultIndicator.classList.add('show');
+            }, 3000);
+        }
+
+        function showResult(disease) {
+            resultName.textContent = disease.name;
+            resultMessage.textContent = messages[disease.name];
+            resultCard.classList.add('show');
+            
+            // Modal após 1 segundo
+            setTimeout(() => {
+                showModal(disease);
+            }, 1000);
+        }
+
+        function showModal(disease) {
+            document.getElementById('modalIcon').textContent = disease.icon;
+            document.getElementById('modalTitle').textContent = disease.name;
+            document.getElementById('modalDescription').textContent = disease.description;
+
+            // Sintomas
+            const symptomsContainer = document.getElementById('modalSymptoms');
+            symptomsContainer.innerHTML = '';
+            disease.symptoms.forEach(symptom => {
+                const div = document.createElement('div');
+                div.className = 'symptom-item';
+                div.innerHTML = `<span style="color: #ef4444;">•</span>${symptom}`;
+                symptomsContainer.appendChild(div);
+            });
+
+            // Tratamento
+            const treatmentContainer = document.getElementById('modalTreatment');
+            treatmentContainer.innerHTML = '';
+            disease.treatment.forEach(treatment => {
+                const div = document.createElement('div');
+                div.className = 'treatment-item';
+                div.innerHTML = `<span style="color: #3b82f6;">✓</span>${treatment}`;
+                treatmentContainer.appendChild(div);
+            });
+
+            // Prevenção
+            const preventionContainer = document.getElementById('modalPrevention');
+            preventionContainer.innerHTML = '';
+            disease.prevention.forEach(prevention => {
+                const div = document.createElement('div');
+                div.className = 'prevention-item';
+                div.innerHTML = `<span style="color: #10b981;">🌟</span>${prevention}`;
+                preventionContainer.appendChild(div);
+            });
+
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            modal.classList.remove('show');
+        }
+
+        // Event Listeners
+        spinButton.addEventListener('click', spinWheel);
+        closeButton.addEventListener('click', closeModal);
+        understandButton.addEventListener('click', closeModal);
+
+        // Fechar modal clicando fora
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
